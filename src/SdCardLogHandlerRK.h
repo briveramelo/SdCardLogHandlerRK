@@ -7,6 +7,9 @@
 
 #include <set>
 
+using particle::__SPISettings;
+using spark::StreamLogHandler;
+using spark::LogCategoryFilters;
 
 /**
  * @brief Class for writing a data stream to SD card
@@ -29,7 +32,7 @@
  */
 class SdCardPrintHandler : public Print {
 public:
-	SdCardPrintHandler(SdFat &sd, uint8_t csPin, SPISettings spiSettings);
+	SdCardPrintHandler(SdFat &sd, uint8_t csPin, __SPISettings spiSettings);
 	virtual ~SdCardPrintHandler();
 
 	/**
@@ -165,7 +168,8 @@ private:
 
     SdFat &sd; //!< The SdFat object (typically a globally allocated object passed into the constructor for this object
     uint8_t csPin; //!< The CS/SS pin for the SD card reader passed into the constructor for this object
-    SPISettings spiSettings; //!< SPI_FULL_SPEED or SPI_HALF_SPEED passed into the constructor for this object
+    __SPISettings spiSettings; //!< SPI_FULL_SPEED or SPI_HALF_SPEED passed into the constructor for this object
+    SdSpiConfig spiConfig;
 
     const char *logsDirName = "logs"; //!< Name of the logs directory, override using withLogsDirName()
     size_t desiredFileSize = 1000000;  //!< Desired log file size, override using withDesiredFileSize()
@@ -216,7 +220,7 @@ public:
 	 * @param level  (optional, default is LOG_LEVEL_INFO)
 	 * @param filters (optional, default is none)
 	 */
-	SdCardLogHandlerBuffer(uint8_t *buf, size_t bufSize, SdFat &sd, uint8_t csPin, SPISettings spiSettings, LogLevel level = LOG_LEVEL_INFO, LogCategoryFilters filters = {});
+	SdCardLogHandlerBuffer(uint8_t *buf, size_t bufSize, SdFat &sd, uint8_t csPin, __SPISettings spiSettings, LogLevel level = LOG_LEVEL_INFO, LogCategoryFilters filters = {});
 	virtual ~SdCardLogHandlerBuffer();
 
 	/**
@@ -257,7 +261,7 @@ public:
 	 * @param level  (optional, default is LOG_LEVEL_INFO)
 	 * @param filters (optional, default is none)
 	 */
-	explicit SdCardLogHandler(SdFat &sd, uint8_t csPin, SPISettings spiSettings, LogLevel level = LOG_LEVEL_INFO, LogCategoryFilters filters = {}) :
+	explicit SdCardLogHandler(SdFat &sd, uint8_t csPin, __SPISettings spiSettings, LogLevel level = LOG_LEVEL_INFO, LogCategoryFilters filters = {}) :
 		SdCardLogHandlerBuffer(ringBuffer, sizeof(ringBuffer), sd, csPin, spiSettings, level, filters) {};
 
 protected:

@@ -1,6 +1,11 @@
+#include "main/globalMacros.h"
+#if SD_CARD == 1
 #include "Particle.h"
 
 #include "SdCardLogHandlerRK.h"
+
+using particle::__SPISettings;
+using spark::LogManager;
 
 // Define the debug logging level here
 // 0 = Off
@@ -11,9 +16,15 @@
 // Don't change these, just change the debugging level above
 // Note: must use Serial.printlnf here, not Log.info, as these are called from the log handler itself!
 #if SDCARD_LOGHANDLER_DEBUG_LEVEL >= 1
-#define DEBUG_NORMAL(x) Serial.printlnf x
+#define DEBUG_NORMAL(x) Serial.println(x)
 #else
 #define DEBUG_NORMAL(x)
+#endif
+
+#if SDCARD_LOGHANDLER_DEBUG_LEVEL >= 1
+#define DEBUG_NORMAL_FORMAT(x,y) Serial.println(x,y)
+#else
+#define DEBUG_NORMAL_FORMAT(x,y)
 #endif
 
 #if SDCARD_LOGHANDLER_DEBUG_LEVEL >= 2
@@ -29,7 +40,7 @@
 //
 //
 
-SdCardLogHandlerBuffer::SdCardLogHandlerBuffer(uint8_t *buf, size_t bufSize, SdFat &sd, uint8_t csPin, SPISettings spiSettings, LogLevel level, LogCategoryFilters filters) :
+SdCardLogHandlerBuffer::SdCardLogHandlerBuffer(uint8_t *buf, size_t bufSize, SdFat &sd, uint8_t csPin, __SPISettings spiSettings, LogLevel level, LogCategoryFilters filters) :
 	StreamLogHandler(*this, level, filters), SdCardPrintHandler(sd, csPin, spiSettings), RingBuffer(buf, bufSize) {
 
 	// This was the old default for SdCardLogHandler. The subclass SdCardPrintHandler now defaults to NULL.
@@ -66,7 +77,7 @@ size_t SdCardLogHandlerBuffer::write(uint8_t c) {
 //
 //
 //
-SdCardPrintHandler::SdCardPrintHandler(SdFat &sd, uint8_t csPin, SPISettings spiSettings) : sd(sd), csPin(csPin), spiSettings(spiSettings){
+SdCardPrintHandler::SdCardPrintHandler(SdFat &sd, uint8_t csPin, __SPISettings spiSettings) : sd(sd), csPin(csPin), spiSettings(spiSettings), spiConfig(csPin, 0, spiSettings.getClock()){
 }
 
 SdCardPrintHandler::~SdCardPrintHandler() {
@@ -94,7 +105,7 @@ void SdCardPrintHandler::scanCard() {
 		SdFile::dateTimeCallback(dateTimeCallback);
 
 		pinMode(csPin, OUTPUT);
-		lastBeginResult = sd.begin(csPin, spiSettings);
+		lastBeginResult = sd.begin(spiConfig);
 		if (!lastBeginResult) {
 			DEBUG_HIGH(("sd.begin failed (no card or no reader)"));
 			needsScanCard = true;
@@ -104,9 +115,9 @@ void SdCardPrintHandler::scanCard() {
 	}
 
 	if (logsDirName != NULL && !sd.exists(logsDirName)) {
-		DEBUG_NORMAL(("creating logs dir %s", logsDirName));
+		DEBUG_NORMAL_FORMAT("creating logs dir %s", logsDirName);
 		if (!sd.mkdir(logsDirName)) {
-			DEBUG_NORMAL(("mkdir failed"));
+			DEBUG_NORMAL("mkdir failed");
 		}
 	}
 
@@ -170,7 +181,8 @@ void SdCardPrintHandler::checkMaxFiles() {
 	while(fileNums.size() > maxFilesToKeep) {
 		const char *name = getName(*it);
 		DEBUG_NORMAL(("removing old log file %s", name));
-		FatFile::remove(&logsDir, name);
+
+        sd.vwd()->remove(name);
 		it = fileNums.erase(it);
 	}
 }
@@ -199,7 +211,7 @@ void SdCardPrintHandler::writeBuf() {
 					// File is too large now. Make a new one.
 					curLogFile.close();
 					lastFileNum++;
-					DEBUG_NORMAL(("creating new log file %04d", lastFileNum));
+					DEBUG_NORMAL_FORMAT("creating new log file %04d", lastFileNum);
 					openLogFile();
 
 					// Are there too many old files?
@@ -228,3 +240,4 @@ void SdCardPrintHandler::dateTimeCallback(uint16_t* date, uint16_t* time) {
 	*time = FAT_TIME(Time.hour(), Time.minute(), Time.second());
 }
 
+#endif
