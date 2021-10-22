@@ -1,3 +1,5 @@
+#include "main/globalMacros.h"
+#if SD_CARD == 1
 #ifndef __SDCARDLOGHANDLERRK_H
 #define __SDCARDLOGHANDLERRK_H
 
@@ -270,3 +272,4 @@ protected:
 
 
 #endif /* __SDCARDLOGHANDLERRK_H */
+#endif

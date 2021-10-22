@@ -1,3 +1,5 @@
+#include "main/globalMacros.h"
+#if SD_CARD == 1
 #ifndef __RINGBUFFER_H
 #define __RINGBUFFER_H
 
@@ -147,3 +149,4 @@ private:
 
 
 #endif /* __RINGBUFFER_H */
+#endif

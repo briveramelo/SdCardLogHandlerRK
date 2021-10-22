@@ -1,6 +1,6 @@
 #include "main/globalMacros.h"
 #if SD_CARD == 1
-#include "Particle.h"
+#include "application.h"
 
 #include "SdCardLogHandlerRK.h"
 
@@ -16,15 +16,9 @@ using spark::LogManager;
 // Don't change these, just change the debugging level above
 // Note: must use Serial.printlnf here, not Log.info, as these are called from the log handler itself!
 #if SDCARD_LOGHANDLER_DEBUG_LEVEL >= 1
-#define DEBUG_NORMAL(x) Serial.println(x)
+#define DEBUG_NORMAL(x) Serial.printlnf x
 #else
 #define DEBUG_NORMAL(x)
-#endif
-
-#if SDCARD_LOGHANDLER_DEBUG_LEVEL >= 1
-#define DEBUG_NORMAL_FORMAT(x,y) Serial.println(x,y)
-#else
-#define DEBUG_NORMAL_FORMAT(x,y)
 #endif
 
 #if SDCARD_LOGHANDLER_DEBUG_LEVEL >= 2
@@ -32,9 +26,6 @@ using spark::LogManager;
 #else
 #define DEBUG_HIGH(x)
 #endif
-
-
-
 
 //
 //
@@ -75,7 +66,7 @@ size_t SdCardLogHandlerBuffer::write(uint8_t c) {
 }
 
 //
-//
+//ENABLE_ARDUINO_FEATURES
 //
 SdCardPrintHandler::SdCardPrintHandler(SdFat &sd, uint8_t csPin, __SPISettings spiSettings) : sd(sd), csPin(csPin), spiSettings(spiSettings), spiConfig(csPin, 0, spiSettings.getClock()){
 }
@@ -115,13 +106,13 @@ void SdCardPrintHandler::scanCard() {
 	}
 
 	if (logsDirName != NULL && !sd.exists(logsDirName)) {
-		DEBUG_NORMAL_FORMAT("creating logs dir %s", logsDirName);
+		DEBUG_NORMAL(("creating logs dir %s", logsDirName));
 		if (!sd.mkdir(logsDirName)) {
-			DEBUG_NORMAL("mkdir failed");
+			DEBUG_NORMAL(("mkdir failed"));
 		}
 	}
 
-	if (logsDir.open(sd.vwd(), logsDirName, O_READ)) {
+	if (logsDir.open(&curLogFile, logsDirName, O_READ)) {
 		DEBUG_HIGH(("opened logs dir %s", logsDirName));
 
 		logsDir.rewind();
@@ -182,7 +173,7 @@ void SdCardPrintHandler::checkMaxFiles() {
 		const char *name = getName(*it);
 		DEBUG_NORMAL(("removing old log file %s", name));
 
-        sd.vwd()->remove(name);
+        curLogFile.remove(name);
 		it = fileNums.erase(it);
 	}
 }
@@ -211,7 +202,7 @@ void SdCardPrintHandler::writeBuf() {
 					// File is too large now. Make a new one.
 					curLogFile.close();
 					lastFileNum++;
-					DEBUG_NORMAL_FORMAT("creating new log file %04d", lastFileNum);
+					DEBUG_NORMAL(("creating new log file %04d", lastFileNum));
 					openLogFile();
 
 					// Are there too many old files?
