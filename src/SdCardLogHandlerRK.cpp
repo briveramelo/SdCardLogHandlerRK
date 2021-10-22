@@ -27,9 +27,9 @@ using spark::LogManager;
 #define DEBUG_HIGH(x)
 #endif
 
-//
-//
-//
+//SdCardLogHandlerBuffer
+//SdCardLogHandlerBuffer
+//SdCardLogHandlerBuffer
 
 SdCardLogHandlerBuffer::SdCardLogHandlerBuffer(uint8_t *buf, size_t bufSize, SdFat &sd, uint8_t csPin, __SPISettings spiSettings, LogLevel level, LogCategoryFilters filters) :
 	StreamLogHandler(*this, level, filters), SdCardPrintHandler(sd, csPin, spiSettings), RingBuffer(buf, bufSize) {
@@ -59,25 +59,21 @@ void SdCardLogHandlerBuffer::loop() {
 	}
 }
 
-
 size_t SdCardLogHandlerBuffer::write(uint8_t c) {
-
 	return RingBuffer::write(&c) ? 1 : 0;
 }
 
-//
-//ENABLE_ARDUINO_FEATURES
-//
+//SDPrintHandler
+//SDPrintHandler
+//SDPrintHandler
+
 SdCardPrintHandler::SdCardPrintHandler(SdFat &sd, uint8_t csPin, __SPISettings spiSettings) : sd(sd), csPin(csPin), spiSettings(spiSettings), spiConfig(csPin, 0, spiSettings.getClock()){
 }
 
 SdCardPrintHandler::~SdCardPrintHandler() {
-
 }
 
-
 size_t SdCardPrintHandler::write(uint8_t c) {
-
 	buf[bufOffset++] = c;
 	if (bufOffset >= BUF_SIZE || c == '\n') {
 		// Buffer is full or have the LF in CRLF, write it out
@@ -111,8 +107,8 @@ void SdCardPrintHandler::scanCard() {
 			DEBUG_NORMAL(("mkdir failed"));
 		}
 	}
-
-	if (logsDir.open(&curLogFile, logsDirName, O_READ)) {
+	
+	if (logsDir.open(sd.vwd(), logsDirName, O_READ)) {
 		DEBUG_HIGH(("opened logs dir %s", logsDirName));
 
 		logsDir.rewind();
@@ -165,7 +161,6 @@ bool SdCardPrintHandler::openLogFile() {
 	}
 }
 
-
 void SdCardPrintHandler::checkMaxFiles() {
 	auto it = fileNums.begin();
 
@@ -178,9 +173,7 @@ void SdCardPrintHandler::checkMaxFiles() {
 	}
 }
 
-
 void SdCardPrintHandler::writeBuf() {
-
 	if (writeToStream) {
 		writeToStream->write(buf, bufOffset);
 	}
