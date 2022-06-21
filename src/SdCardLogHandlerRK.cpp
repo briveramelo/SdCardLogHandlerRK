@@ -11,7 +11,9 @@ using spark::LogManager;
 // 0 = Off
 // 1 = Normal
 // 2 = High
-#define SDCARD_LOGHANDLER_DEBUG_LEVEL 1
+#ifndef SDCARD_LOGHANDLER_DEBUG_LEVEL
+#define SDCARD_LOGHANDLER_DEBUG_LEVEL 0
+#endif
 
 // Don't change these, just change the debugging level above
 // Note: must use Serial.printlnf here, not Log.info, as these are called from the log handler itself!
